@@ -1,22 +1,34 @@
 ## U.S. Business Lead Collector (No Website)
 
-This repository includes a script that pulls public business records from OpenStreetMap and exports leads where website fields are missing.
+This repo provides a CLI to export public business leads from OpenStreetMap where `website` / `contact:website` tags are missing.
 
-### Output columns
+### Exported fields
 - business_name
 - phone / mobile number
 - email
 - facebook
 - instagram
 - city, state, country
-- OSM metadata (type, id, lat, lon)
+- osm_type, osm_id, lat, lon
 
 ### Usage
+Single state:
 ```bash
 python3 collect_us_business_leads.py --state "Texas" --limit 8000 --output texas_leads.csv
 ```
 
+All U.S. states + DC:
+```bash
+python3 collect_us_business_leads.py --all-states --limit 4000 --output usa_leads.csv --sleep 1.5
+```
+
+### Improvements in this version
+- Supports `--all-states` for nationwide collection.
+- Uses retry/backoff for transient network/API errors.
+- Falls back across multiple Overpass endpoints.
+- Uses proper Overpass form payload (`data=<query>`), improving compatibility.
+
 ### Notes
-- Data quality depends on what is available in OpenStreetMap.
-- Missing website in OSM means `website`/`contact:website` tags are absent; some businesses might still have a site not listed in OSM.
-- For nationwide coverage, run once per state and merge the CSV files.
+- Data quality depends on OpenStreetMap tagging completeness.
+- A missing OSM website tag does **not** guarantee the business has no website in reality.
+- Respect API limits; keep `--sleep` above zero for large runs.
