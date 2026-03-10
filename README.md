@@ -1,10 +1,13 @@
 ## U.S. Business Lead Collector (No Website)
 
-This repo provides a CLI to export public business leads from OpenStreetMap where `website` / `contact:website` tags are missing.
+This repo provides a CLI to export public business leads from OpenStreetMap where `website` / `contact:website` tags are missing. The output is ready to import into Google Sheets and includes a Google Maps URL for each result.
 
 ### Exported fields
+- name
 - business_name
-- phone / mobile number
+- mobile number
+- address
+- google_maps_url
 - email
 - facebook
 - instagram
@@ -32,3 +35,4 @@ python3 collect_us_business_leads.py --all-states --limit 4000 --output usa_lead
 - Data quality depends on OpenStreetMap tagging completeness.
 - A missing OSM website tag does **not** guarantee the business has no website in reality.
 - Respect API limits; keep `--sleep` above zero for large runs.
+- This script uses OpenStreetMap data and creates a Google Maps link from coordinates; it does **not** scrape Google Maps directly.
