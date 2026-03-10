@@ -84,8 +84,11 @@ US_STATES: Sequence[str] = (
 
 @dataclass
 class Lead:
+    name: str
     business_name: str
-    phone: str
+    mobile_number: str
+    address: str
+    google_maps_url: str
     email: str
     facebook: str
     instagram: str
@@ -215,7 +218,7 @@ def pick(tags: Dict[str, str], *keys: str) -> str:
 def extract_lead(element: Dict, fallback_state: str) -> Optional[Lead]:
     tags = element.get("tags", {})
 
-    phone = pick(tags, "phone", "contact:phone", "mobile", "contact:mobile")
+    phone = pick(tags, "mobile", "contact:mobile", "phone", "contact:phone")
     email = pick(tags, "email", "contact:email")
     facebook = pick(tags, "facebook", "contact:facebook")
     instagram = pick(tags, "instagram", "contact:instagram")
@@ -226,9 +229,26 @@ def extract_lead(element: Dict, fallback_state: str) -> Optional[Lead]:
     lat = str(element.get("lat") or element.get("center", {}).get("lat") or "")
     lon = str(element.get("lon") or element.get("center", {}).get("lon") or "")
 
+    address_parts = [
+        pick(tags, "addr:housenumber"),
+        pick(tags, "addr:street"),
+        pick(tags, "addr:city", "city"),
+        pick(tags, "addr:state", "state") or fallback_state,
+        pick(tags, "addr:postcode"),
+        pick(tags, "addr:country", "country") or "USA",
+    ]
+    address = ", ".join(part for part in address_parts if part)
+
+    google_maps_url = ""
+    if lat and lon:
+        google_maps_url = f"https://www.google.com/maps?q={lat},{lon}"
+
     return Lead(
+        name=pick(tags, "name"),
         business_name=pick(tags, "name"),
-        phone=phone,
+        mobile_number=phone,
+        address=address,
+        google_maps_url=google_maps_url,
         email=email,
         facebook=facebook,
         instagram=instagram,
@@ -248,7 +268,7 @@ def dedupe(leads: Iterable[Lead]) -> List[Lead]:
     for lead in leads:
         key = (
             lead.business_name.lower(),
-            lead.phone,
+            lead.mobile_number,
             lead.email.lower(),
             lead.facebook.lower(),
             lead.instagram.lower(),
@@ -261,8 +281,11 @@ def dedupe(leads: Iterable[Lead]) -> List[Lead]:
 
 def save_csv(leads: List[Lead], output: Path) -> None:
     fields = [
+        "name",
         "business_name",
-        "phone",
+        "mobile_number",
+        "address",
+        "google_maps_url",
         "email",
         "facebook",
         "instagram",
